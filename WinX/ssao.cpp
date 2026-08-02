@@ -1,0 +1,186 @@
+#include "ssao.h"
+#include <random>
+#include <iostream>
+using namespace std;
+
+static float lerp(float a, float b, float f) { return a + f * (b - a); }
+
+static const char* quadVertSrc = R"(
+#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aUV;
+out vec2 TexCoords;
+void main() {
+    TexCoords = aUV;
+    gl_Position = vec4(aPos, 0.0, 1.0);
+}
+)";
+
+static const char* ssaoFragSrc = R"(
+#version 330 core
+out float FragColor;
+in vec2 TexCoords;
+
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D texNoise;
+
+uniform vec3 samples[32];
+uniform mat4 view;
+uniform mat4 projection;
+uniform vec2 noiseScale;
+
+const int kernelSize = 32;
+const float radius = 0.5;
+const float biasAmt = 0.025;
+
+void main() {
+    vec3 fragPosWorld = texture(gPosition, TexCoords).rgb;
+    vec3 normalWorld = normalize(texture(gNormal, TexCoords).rgb);
+
+    vec3 fragPos = vec3(view * vec4(fragPosWorld, 1.0));
+    vec3 normal = normalize(mat3(view) * normalWorld);
+
+    vec3 randomVec = normalize(texture(texNoise, TexCoords * noiseScale).xyz);
+    vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+    vec3 bitangent = cross(normal, tangent);
+    mat3 TBN = mat3(tangent, bitangent, normal);
+
+    float occlusion = 0.0;
+    for (int i = 0; i < kernelSize; i++) {
+        vec3 samplePos = TBN * samples[i];
+        samplePos = fragPos + samplePos * radius;
+
+        vec4 offset = vec4(samplePos, 1.0);
+        offset = projection * offset;
+        offset.xyz /= offset.w;
+        offset.xyz = offset.xyz * 0.5 + 0.5;
+
+        vec3 sampledPosWorld = texture(gPosition, offset.xy).rgb;
+        vec3 sampledPosView = vec3(view * vec4(sampledPosWorld, 1.0));
+
+        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampledPosView.z));
+        occlusion += (sampledPosView.z >= samplePos.z + biasAmt ? 1.0 : 0.0) * rangeCheck;
+    }
+    occlusion = 1.0 - (occlusion / float(kernelSize));
+    FragColor = occlusion;
+}
+)";
+
+static const char* blurFragSrc = R"(
+#version 330 core
+out float FragColor;
+in vec2 TexCoords;
+uniform sampler2D ssaoInput;
+void main() {
+    vec2 texelSize = 1.0 / vec2(textureSize(ssaoInput, 0));
+    float result = 0.0;
+    for (int x = -2; x < 2; x++)
+        for (int y = -2; y < 2; y++) {
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            result += texture(ssaoInput, TexCoords + offset).r;
+        }
+    FragColor = result / 16.0;
+}
+)";
+
+void SSAO::init(int width, int height) {
+    m_width = width; m_height = height;
+    m_ssaoShader = new Shader(quadVertSrc, ssaoFragSrc);
+    m_blurShader = new Shader(quadVertSrc, blurFragSrc);
+
+    uniform_real_distribution<float> randomFloats(0.0f, 1.0f);
+    default_random_engine generator;
+
+    for (int i = 0; i < 32; i++) {
+        glm::vec3 sample(
+            randomFloats(generator) * 2.0f - 1.0f,
+            randomFloats(generator) * 2.0f - 1.0f,
+            randomFloats(generator)
+        );
+        sample = glm::normalize(sample);
+        sample *= randomFloats(generator);
+        float scale = (float)i / 32.0f;
+        scale = lerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+        m_kernel.push_back(sample);
+    }
+
+    vector<glm::vec3> noise;
+    for (int i = 0; i < 16; i++) {
+        noise.push_back(glm::vec3(
+            randomFloats(generator) * 2.0f - 1.0f,
+            randomFloats(generator) * 2.0f - 1.0f,
+            0.0f
+        ));
+    }
+    glGenTextures(1, &m_noiseTex);
+    glBindTexture(GL_TEXTURE_2D, m_noiseTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, noise.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glGenFramebuffers(1, &m_ssaoFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoFBO);
+    glGenTextures(1, &m_ssaoTex);
+    glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoTex, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cerr << "SSAO FBO incomplete\n";
+
+    glGenFramebuffers(1, &m_ssaoBlurFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoBlurFBO);
+    glGenTextures(1, &m_ssaoBlurTex);
+    glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoBlurTex, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cerr << "SSAO blur FBO incomplete\n";
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void SSAO::renderSSAO(GLuint gPositionTex, GLuint gNormalTex,
+    const glm::mat4& view, const glm::mat4& projection, GLuint quadVAO) {
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoFBO);
+    glViewport(0, 0, m_width, m_height);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    m_ssaoShader->use();
+    for (int i = 0; i < 32; i++)
+        m_ssaoShader->setVec3("samples[" + to_string(i) + "]", m_kernel[i]);
+    m_ssaoShader->setMat4("view", view);
+    m_ssaoShader->setMat4("projection", projection);
+    m_ssaoShader->setVec2("noiseScale", glm::vec2(m_width / 4.0f, m_height / 4.0f));
+    m_ssaoShader->setInt("gPosition", 0);
+    m_ssaoShader->setInt("gNormal", 1);
+    m_ssaoShader->setInt("texNoise", 2);
+
+    glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, gPositionTex);
+    glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, gNormalTex);
+    glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, m_noiseTex);
+
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void SSAO::blur(GLuint quadVAO) {
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoBlurFBO);
+    glViewport(0, 0, m_width, m_height);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    m_blurShader->use();
+    m_blurShader->setInt("ssaoInput", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
+
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}

@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{b23c7dda-4f58-4d99-80d3-38a20b9e1b9f}</ProjectGuid>
+    <RootNamespace>WinX</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\imgui-master %281%29\imgui-master;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\imgui-master %281%29\imgui-master\backends;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\lib-vc2022;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\include;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glad %282%29\include;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glad %282%29\src;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glm-1.0.3\glm;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master\Jolt;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master\JoltViewer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;
+opengl32.lib;
+User32.lib
+;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\imgui-master %281%29\imgui-master;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\imgui-master %281%29\imgui-master\backends;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\lib-vc2022;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\include;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glad %282%29\include;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glad %282%29\src;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glm-1.0.3\glm;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master\Jolt;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master\JoltViewer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;
+opengl32.lib;
+User32.lib
+;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\imgui-master %281%29\imgui-master;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\imgui-master %281%29\imgui-master\backends;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\lib-vc2022;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\include;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glad %282%29\include;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glad %282%29\src;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glm-1.0.3\glm;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master\Jolt;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master\JoltViewer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;
+opengl32.lib;
+User32.lib
+;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\imgui-master %281%29\imgui-master;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\imgui-master %281%29\imgui-master\backends;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\lib-vc2022;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\include;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glad %282%29\include;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glad %282%29\src;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glm-1.0.3\glm;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master\Jolt;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master;C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\JoltPhysics-master\JoltViewer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\QuipG\OneDrive\Desktop\WinX_Engine-main\WinX_Engine-main\glfw-3.4.bin.WIN64 %281%29\glfw-3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;
+opengl32.lib;
+User32.lib
+;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\glad (2)\src\glad.c" />
+    <ClCompile Include="..\imgui-master (1)\imgui-master\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\imgui-master (1)\imgui-master\backends\imgui_impl_opengl2.cpp" />
+    <ClCompile Include="..\imgui-master (1)\imgui-master\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\imgui-master (1)\imgui-master\imgui.cpp" />
+    <ClCompile Include="..\imgui-master (1)\imgui-master\imgui_demo.cpp" />
+    <ClCompile Include="..\imgui-master (1)\imgui-master\imgui_draw.cpp" />
+    <ClCompile Include="..\imgui-master (1)\imgui-master\imgui_tables.cpp" />
+    <ClCompile Include="..\imgui-master (1)\imgui-master\imgui_widgets.cpp" />
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="collision.cpp" />
+    <ClCompile Include="debugdraw.cpp" />
+    <ClCompile Include="gbuffer.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="mapfile.cpp" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="shader.cpp" />
+    <ClCompile Include="shadow.cpp" />
+    <ClCompile Include="skybox.cpp" />
+    <ClCompile Include="ssao.cpp" />
+    <ClCompile Include="ssgi.cpp" />
+    <ClCompile Include="texture.cpp" />
+    <ClCompile Include="window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\imgui-master (1)\imgui-master\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="..\imgui-master (1)\imgui-master\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\imgui-master (1)\imgui-master\imconfig.h" />
+    <ClInclude Include="..\imgui-master (1)\imgui-master\imgui.h" />
+    <ClInclude Include="..\imgui-master (1)\imgui-master\imgui_internal.h" />
+    <ClInclude Include="..\imgui-master (1)\imgui-master\imstb_rectpack.h" />
+    <ClInclude Include="..\imgui-master (1)\imgui-master\imstb_textedit.h" />
+    <ClInclude Include="..\imgui-master (1)\imgui-master\imstb_truetype.h" />
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="collider.h" />
+    <ClInclude Include="collision.h" />
+    <ClInclude Include="debugdraw.h" />
+    <ClInclude Include="gbuffer.h" />
+    <ClInclude Include="mapfile.h" />
+    <ClInclude Include="physics_world.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="raycast.h" />
+    <ClInclude Include="rigidbody.h" />
+    <ClInclude Include="shader.h" />
+    <ClInclude Include="shadow.h" />
+    <ClInclude Include="skybox.h" />
+    <ClInclude Include="ssao.h" />
+    <ClInclude Include="ssgi.h" />
+    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="texture.h" />
+    <ClInclude Include="window.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
