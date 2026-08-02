@@ -1,4 +1,5 @@
 #include "player.h"
+#include <cmath>
 
 void Player::update(GLFWwindow* window, const CollisionMesh& collisionMesh, float deltaTime, Camera& camera) {
     deltaTime = glm::min(deltaTime, 0.05f);
@@ -19,7 +20,12 @@ void Player::update(GLFWwindow* window, const CollisionMesh& collisionMesh, floa
     if (glm::dot(wishDir, wishDir) > 1e-6f) wishDir = glm::normalize(wishDir);
 
     bool sprint = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+    bool crouchKey = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS
+        || glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
+    m_IsCrouching = crouchKey;
+
     float wishSpeed = sprint ? m_SprintSpeed : m_WalkSpeed;
+    if (m_IsCrouching) wishSpeed *= m_CrouchSpeedMul;
 
     bool wasGrounded = m_IsGrounded;
 
@@ -45,11 +51,8 @@ void Player::update(GLFWwindow* window, const CollisionMesh& collisionMesh, floa
         airAccelerate(wishDir, wishSpeed, m_AirAccelerate, deltaTime);
     }
 
-    bool jumpHeld = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-    if (m_Velocity.y > 0.0f && !jumpHeld)
-        m_Velocity.y -= m_Gravity * 2.0f * deltaTime;
-    else
-        m_Velocity.y -= m_Gravity * deltaTime;
+    // GoldSrc gravity: constant, no variable jump height.
+    m_Velocity.y -= m_Gravity * deltaTime;
 
     m_Velocity.y = glm::max(m_Velocity.y, -m_MaxFallSpeed);
 
@@ -76,7 +79,11 @@ void Player::update(GLFWwindow* window, const CollisionMesh& collisionMesh, floa
         }
     }
 
-    camera.position = m_Position + worldUp * m_EyeHeight;
+    // Smooth eye height so crouching feels like Half-Life's duck.
+    float targetEye = m_IsCrouching ? m_CrouchEyeHeight : m_EyeHeight;
+    m_eyeHeightCurrent += (targetEye - m_eyeHeightCurrent) * (1.0f - expf(-12.0f * deltaTime));
+
+    camera.position = m_Position + worldUp * m_eyeHeightCurrent;
 }
 
 CollisionContact Player::integrateStep(const CollisionMesh& mesh, float dt) {
@@ -88,6 +95,41 @@ CollisionContact Player::integrateStep(const CollisionMesh& mesh, float dt) {
 
     glm::vec3 tryPos = m_Position + horizDisp;
     CollisionContact cH = mesh.resolveSphereCollisionDetailed(tryPos, m_Radius);
+
+    // Follow climbable slopes and slide along walls instead of stopping dead,
+    // which keeps momentum through ramps and acute-angle geometry.
+    if (cH.collided) {
+        float contactUp = glm::dot(cH.normal, worldUp);
+        float intoSurface = glm::dot(horizDisp, cH.normal);
+
+        if (contactUp >= m_SlopeClimbNormalY) {
+            // Climbable slope: move along the surface plane (gains an upward component).
+            if (intoSurface < 0.0f) {
+                glm::vec3 slide = horizDisp - cH.normal * intoSurface;
+                if (glm::dot(slide, slide) > 1e-8f) {
+                    glm::vec3 slopePos = m_Position + slide;
+                    CollisionContact cS = mesh.resolveSphereCollisionDetailed(slopePos, m_Radius);
+                    if (!cS.collided || glm::dot(cS.normal, worldUp) >= m_SlopeClimbNormalY) {
+                        tryPos = slopePos;
+                        cH = cS;
+                    }
+                }
+            }
+        }
+        else {
+            // Wall: slide sideways along the face.
+            glm::vec3 slide = horizDisp - cH.normal * intoSurface;
+            slide.y = 0.0f;
+            if (glm::dot(slide, slide) > 1e-8f) {
+                glm::vec3 wallPos = m_Position + slide;
+                CollisionContact cW = mesh.resolveSphereCollisionDetailed(wallPos, m_Radius);
+                if (!cW.collided) {
+                    tryPos = wallPos;
+                    cH = cW;
+                }
+            }
+        }
+    }
 
     bool wallBlocked = cH.collided && glm::dot(cH.normal, worldUp) < 0.3f;
     bool canStep = m_StepHeight > 0.0f && m_Velocity.y <= 0.1f;

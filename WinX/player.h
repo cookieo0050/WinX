@@ -14,20 +14,31 @@ public:
     float m_Radius = 0.35f;
     float m_StepHeight = 0.7f;
 
+    // GoldSrc / Half-Life 1 style tuning (metres, 1 unit ~= 1 inch)
     float m_WalkSpeed = 4.0f;
-    float m_SprintSpeed = 7.0f;
-    float m_Accelerate = 10.0f;
-    float m_AirAccelerate = 10.0f;
-    float m_Friction = 4.0f;
-    float m_Stopspeed = 0.8f;
-    float m_AirSpeedCap = 12.0f;
-    float m_JumpSpeed = 7.5f;
-    float m_MaxFallSpeed = 20.0f;
-    float m_Gravity = 22.0f;
-    float m_CoyoteTime = 0.12f;
-    float m_JumpBufferTime = 0.12f;
+    float m_SprintSpeed = 7.8f;
+    float m_Accelerate = 4.0f;
+    float m_AirAccelerate = 0.8f;
+    float m_Friction = 3.0f;
+    float m_Stopspeed = 2.4f;
+    float m_AirSpeedCap = 8.0f;
+    float m_JumpSpeed = 6.6f;
+    float m_MaxFallSpeed = 16.0f;
+    float m_Gravity = 21.5f;
+    float m_CoyoteTime = 0.04f;
+    float m_JumpBufferTime = 0.04f;
+
+    // Slopes with normal.y >= this can be walked up; steeper acts as a wall.
+    float m_SlopeClimbNormalY = 0.4f;
+
+    // Crouch / duck
+    float m_CrouchEyeHeight = 0.65f;
+    float m_CrouchSpeedMul = 0.5f;
 
     void update(GLFWwindow* window, const CollisionMesh& collisionMesh, float deltaTime, Camera& camera);
+
+    bool isCrouching() const { return m_IsCrouching; }
+    float eyeHeight() const { return m_eyeHeightCurrent; }
 
 private:
     CollisionContact integrateStep(const CollisionMesh& collisionMesh, float deltaTime);
@@ -39,4 +50,6 @@ private:
     float m_time = 0.0f;
     float m_lastGroundedTime = -1000.0f;
     float m_jumpBufferTimer = 0.0f;
+    float m_eyeHeightCurrent = 1.5f;
+    bool m_IsCrouching = false;
 };

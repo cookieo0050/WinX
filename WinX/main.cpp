@@ -501,7 +501,7 @@ int main() {
             player.update(window.handle(), collisionMesh, deltaTime, camera);
         }
         else {
-            camera.position = player.m_Position + glm::vec3(0.0f, 1.5f, 0.0f);
+            camera.position = player.m_Position + glm::vec3(0.0f, player.eyeHeight(), 0.0f);
         }
 
         glm::mat4 view = camera.getViewMatrix();
@@ -719,6 +719,7 @@ int main() {
             ImGui::Text("Position: (%.2f, %.2f, %.2f)", player.m_Position.x, player.m_Position.y, player.m_Position.z);
             ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", player.m_Velocity.x, player.m_Velocity.y, player.m_Velocity.z);
             ImGui::Text("Grounded: %s", player.m_IsGrounded ? "Yes" : "No");
+            ImGui::Text("Crouching: %s", player.isCrouching() ? "Yes" : "No");
 
             ImGui::Separator();
             ImGui::Text("Level Info");
@@ -738,6 +739,7 @@ int main() {
 
             ImGui::Separator();
             ImGui::Checkbox("Wireframe (T)", &wireframe);
+            ImGui::Text("Crouch: Left Ctrl / C");
             ImGui::Text("Toggle Panel / Mouse: ` (tilde)");
 
             ImGui::End();
