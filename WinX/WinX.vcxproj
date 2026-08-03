@@ -155,6 +155,7 @@ User32.lib
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\JoltPhysics-master\Jolt\**\*.cpp" />
     <ClCompile Include="..\glad (2)\src\glad.c" />
     <ClCompile Include="..\imgui-master (1)\imgui-master\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="..\imgui-master (1)\imgui-master\backends\imgui_impl_opengl2.cpp" />
@@ -166,8 +167,10 @@ User32.lib
     <ClCompile Include="..\imgui-master (1)\imgui-master\imgui_widgets.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="collision.cpp" />
+    <ClCompile Include="console.cpp" />
     <ClCompile Include="debugdraw.cpp" />
     <ClCompile Include="gbuffer.cpp" />
+    <ClCompile Include="jolt_world.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mapfile.cpp" />
     <ClCompile Include="player.cpp" />
@@ -191,8 +194,10 @@ User32.lib
     <ClInclude Include="camera.h" />
     <ClInclude Include="collider.h" />
     <ClInclude Include="collision.h" />
+    <ClInclude Include="console.h" />
     <ClInclude Include="debugdraw.h" />
     <ClInclude Include="gbuffer.h" />
+    <ClInclude Include="jolt_world.h" />
     <ClInclude Include="mapfile.h" />
     <ClInclude Include="physics_world.h" />
     <ClInclude Include="player.h" />

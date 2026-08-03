@@ -2,7 +2,8 @@
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include "camera.h"
-#include "collision.h"
+
+class JoltWorld;
 
 class Player {
 public:
@@ -11,8 +12,6 @@ public:
     bool m_IsGrounded = false;
 
     float m_EyeHeight = 1.5f;
-    float m_Radius = 0.35f;
-    float m_StepHeight = 0.7f;
 
     // GoldSrc / Half-Life 1 style tuning (metres, 1 unit ~= 1 inch)
     float m_WalkSpeed = 4.0f;
@@ -23,8 +22,6 @@ public:
     float m_Stopspeed = 2.4f;
     float m_AirSpeedCap = 8.0f;
     float m_JumpSpeed = 6.6f;
-    float m_MaxFallSpeed = 16.0f;
-    float m_Gravity = 21.5f;
     float m_CoyoteTime = 0.04f;
     float m_JumpBufferTime = 0.04f;
 
@@ -35,14 +32,12 @@ public:
     float m_CrouchEyeHeight = 0.65f;
     float m_CrouchSpeedMul = 0.5f;
 
-    void update(GLFWwindow* window, const CollisionMesh& collisionMesh, float deltaTime, Camera& camera);
+    void update(GLFWwindow* window, float deltaTime, Camera& camera, JoltWorld& joltWorld);
 
     bool isCrouching() const { return m_IsCrouching; }
     float eyeHeight() const { return m_eyeHeightCurrent; }
 
 private:
-    CollisionContact integrateStep(const CollisionMesh& collisionMesh, float deltaTime);
-    bool tryStepUp(const CollisionMesh& collisionMesh, const glm::vec3& startPos, const glm::vec3& horizDisp);
     void applyFriction(float deltaTime);
     void accelerate(const glm::vec3& wishDir, float wishSpeed, float accel, float deltaTime);
     void airAccelerate(const glm::vec3& wishDir, float wishSpeed, float accel, float deltaTime);

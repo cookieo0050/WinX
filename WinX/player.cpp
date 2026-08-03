@@ -1,7 +1,8 @@
 #include "player.h"
+#include "jolt_world.h"
 #include <cmath>
 
-void Player::update(GLFWwindow* window, const CollisionMesh& collisionMesh, float deltaTime, Camera& camera) {
+void Player::update(GLFWwindow* window, float deltaTime, Camera& camera, JoltWorld& joltWorld) {
     deltaTime = glm::min(deltaTime, 0.05f);
     m_time += deltaTime;
 
@@ -51,148 +52,17 @@ void Player::update(GLFWwindow* window, const CollisionMesh& collisionMesh, floa
         airAccelerate(wishDir, wishSpeed, m_AirAccelerate, deltaTime);
     }
 
-    // GoldSrc gravity: constant, no variable jump height.
-    m_Velocity.y -= m_Gravity * deltaTime;
-
-    m_Velocity.y = glm::max(m_Velocity.y, -m_MaxFallSpeed);
-
-    float maxStep = m_Radius * 0.35f;
-    float moveDistance = glm::length(m_Velocity) * deltaTime;
-    int substeps = moveDistance > maxStep ? (int)glm::ceil(moveDistance / maxStep) : 1;
-    float stepDt = deltaTime / (float)substeps;
-
-    CollisionContact lastContact;
-    for (int s = 0; s < substeps; ++s)
-        lastContact = integrateStep(collisionMesh, stepDt);
-
-    m_IsGrounded = false;
-    if (lastContact.collided && glm::dot(lastContact.normal, worldUp) > 0.6f) {
-        m_IsGrounded = true;
-        if (m_Velocity.y <= 0.0f) m_Velocity.y = 0.0f;
-    }
-    else {
-        RaycastHit ground = collisionMesh.raycast(m_Position, glm::vec3(0.0f, -1.0f, 0.0f), m_Radius + 0.15f);
-        if (ground.hit && m_Velocity.y <= 0.0f) {
-            m_IsGrounded = true;
-            m_Position.y = ground.point.y + m_Radius;
-            m_Velocity.y = 0.0f;
-        }
-    }
+    // Jolt owns all movement and collision: it integrates gravity, resolves the capsule
+    // against the world (walls, slopes, stairs, falling, landing) and writes back the
+    // resolved position, velocity and grounded state. This controller only picks the
+    // desired velocity, so the GoldSrc acceleration/friction feel is preserved.
+    joltWorld.step(deltaTime, m_Position, m_Velocity, m_IsGrounded);
 
     // Smooth eye height so crouching feels like Half-Life's duck.
     float targetEye = m_IsCrouching ? m_CrouchEyeHeight : m_EyeHeight;
     m_eyeHeightCurrent += (targetEye - m_eyeHeightCurrent) * (1.0f - expf(-12.0f * deltaTime));
 
     camera.position = m_Position + worldUp * m_eyeHeightCurrent;
-}
-
-CollisionContact Player::integrateStep(const CollisionMesh& mesh, float dt) {
-    const glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-
-    glm::vec3 horizDisp = m_Velocity;
-    horizDisp.y = 0.0f;
-    horizDisp *= dt;
-
-    glm::vec3 tryPos = m_Position + horizDisp;
-    CollisionContact cH = mesh.resolveSphereCollisionDetailed(tryPos, m_Radius);
-
-    // Follow climbable slopes and slide along walls instead of stopping dead,
-    // which keeps momentum through ramps and acute-angle geometry.
-    if (cH.collided) {
-        float contactUp = glm::dot(cH.normal, worldUp);
-        float intoSurface = glm::dot(horizDisp, cH.normal);
-
-        if (contactUp >= m_SlopeClimbNormalY) {
-            // Climbable slope: move along the surface plane (gains an upward component).
-            if (intoSurface < 0.0f) {
-                glm::vec3 slide = horizDisp - cH.normal * intoSurface;
-                if (glm::dot(slide, slide) > 1e-8f) {
-                    glm::vec3 slopePos = m_Position + slide;
-                    CollisionContact cS = mesh.resolveSphereCollisionDetailed(slopePos, m_Radius);
-                    if (!cS.collided || glm::dot(cS.normal, worldUp) >= m_SlopeClimbNormalY) {
-                        tryPos = slopePos;
-                        cH = cS;
-                    }
-                }
-            }
-        }
-        else {
-            // Wall: slide sideways along the face.
-            glm::vec3 slide = horizDisp - cH.normal * intoSurface;
-            slide.y = 0.0f;
-            if (glm::dot(slide, slide) > 1e-8f) {
-                glm::vec3 wallPos = m_Position + slide;
-                CollisionContact cW = mesh.resolveSphereCollisionDetailed(wallPos, m_Radius);
-                if (!cW.collided) {
-                    tryPos = wallPos;
-                    cH = cW;
-                }
-            }
-        }
-    }
-
-    bool wallBlocked = cH.collided && glm::dot(cH.normal, worldUp) < 0.3f;
-    bool canStep = m_StepHeight > 0.0f && m_Velocity.y <= 0.1f;
-
-    if (wallBlocked && canStep && tryStepUp(mesh, m_Position, horizDisp)) {
-        // Stepped up onto the obstacle; horizontal velocity is preserved.
-    }
-    else {
-        m_Position = tryPos;
-        if (cH.collided) {
-            float vn = glm::dot(m_Velocity, cH.normal);
-            if (vn < 0.0f) m_Velocity -= cH.normal * vn;
-        }
-    }
-
-    glm::vec3 vDisp(0.0f, m_Velocity.y * dt, 0.0f);
-    m_Position += vDisp;
-    CollisionContact cV = mesh.resolveSphereCollisionDetailed(m_Position, m_Radius);
-    if (cV.collided) {
-        float vn = glm::dot(m_Velocity, cV.normal);
-        if (vn < 0.0f) m_Velocity -= cV.normal * vn;
-    }
-
-    return cV;
-}
-
-bool Player::tryStepUp(const CollisionMesh& mesh, const glm::vec3& startPos, const glm::vec3& horizDisp) {
-    const float minLift = 0.1f;
-    const float minProgress = 0.005f;
-    const glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-    const glm::vec3 down(0.0f, -1.0f, 0.0f);
-
-    // Try the full step height first, then smaller lifts if headroom is limited.
-    float liftHeight = m_StepHeight;
-    for (int attempt = 0; attempt < 4; ++attempt) {
-        glm::vec3 upPos = startPos + worldUp * liftHeight;
-        CollisionContact cUp = mesh.resolveSphereCollisionDetailed(upPos, m_Radius);
-        float lift = upPos.y - startPos.y;
-        if (lift >= minLift) {
-            glm::vec3 stepPos = upPos + horizDisp;
-            CollisionContact cStep = mesh.resolveSphereCollisionDetailed(stepPos, m_Radius);
-
-            glm::vec3 hProgress = stepPos - upPos;
-            hProgress.y = 0.0f;
-            if (glm::length(hProgress) >= minProgress) {
-                glm::vec3 downPos = stepPos;
-                RaycastHit ground = mesh.raycast(stepPos, down, liftHeight + m_Radius + 0.5f);
-                if (ground.hit)
-                    downPos.y = ground.point.y + m_Radius;
-                else
-                    downPos.y = stepPos.y;
-
-                CollisionContact cFinal = mesh.resolveSphereCollisionDetailed(downPos, m_Radius);
-                bool ceilingAbove = cFinal.collided && glm::dot(cFinal.normal, worldUp) < -0.3f;
-                if (!ceilingAbove) {
-                    m_Position = downPos;
-                    return true;
-                }
-            }
-        }
-        liftHeight *= 0.5f;
-    }
-    return false;
 }
 
 void Player::applyFriction(float deltaTime) {

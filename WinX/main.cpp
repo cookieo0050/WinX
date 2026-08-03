@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <cstdio>
 #include "window.h"
 #include "camera.h"
 #include "shader.h"
@@ -18,6 +19,8 @@
 #include "ssao.h"
 #include "ssgi.h"
 #include "player.h"
+#include "jolt_world.h"
+#include "console.h"
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
@@ -37,6 +40,7 @@ bool mouseLookEnabled = true;
 const string TEXTURES_FOLDER = "C:/Users/QuipG/OneDrive/Desktop/WinX_Engine-main/WinX_Engine-main/GameRoot/textures/";
 const string MAP_PATH = "C:/Users/QuipG/OneDrive/Desktop/WinX_Engine-main/WinX_Engine-main/Maps/Testroom.map";
 const string CROSSHAIR_PATH = "C:/Users/QuipG/OneDrive/Desktop/WinX_Engine-main/WinX_Engine-main/Images/Crosshair.png";
+const string FONT_PATH = "C:/Users/QuipG/OneDrive/Desktop/WinX_Engine-main/WinX_Engine-main/oldschool_pc_font_pack_v2.2_FULL/ttf - Px (pixel outline)/Px437_IBM_VGA_8x16.ttf";
 
 // ==========================================
 // SHADER SOURCE CODES
@@ -308,6 +312,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     camera.processMouseMovement(xoffset, yoffset);
 }
 
+// Runtime errors are printed into the developer console instead of only going to stderr.
+void glfw_error_callback(int error, const char* description) {
+    g_Console.logError("GLFW (" + std::to_string(error) + "): " + std::string(description));
+}
+
 struct LevelChunk {
     Texture texture;
     GLuint VAO = 0, VBO = 0;
@@ -315,13 +324,36 @@ struct LevelChunk {
 };
 
 int main() {
+    glfwSetErrorCallback(glfw_error_callback);
+
     Window window(800, 600, "WinX Engine");
     glfwSetCursorPosCallback(window.handle(), mouse_callback);
     window.setCursorDisabled(true);
 
+    g_Console.log("WinX Engine - Developer Console");
+    g_Console.log("Toggle: ~ (tilde). Type 'help' for commands.");
+    g_Console.registerCommand("pos", [](const std::vector<std::string>&) {
+        char buf[160];
+        snprintf(buf, sizeof(buf), "position (%.2f, %.2f, %.2f)  velocity (%.2f, %.2f, %.2f)",
+            player.m_Position.x, player.m_Position.y, player.m_Position.z,
+            player.m_Velocity.x, player.m_Velocity.y, player.m_Velocity.z);
+        g_Console.log(buf);
+    });
+    g_Console.setQuitCallback([&window]() {
+        glfwSetWindowShouldClose(window.handle(), GLFW_TRUE);
+    });
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    // Old-school IBM VGA 8x16 bitmap font. These fonts are designed on an 8x16 pixel
+    // grid, so render at native size with oversampling disabled to keep them crisp.
+    ImFontConfig fontCfg;
+    fontCfg.OversampleH = 1;
+    fontCfg.OversampleV = 1;
+    fontCfg.PixelSnapH = true;
+    if (io.Fonts->AddFontFromFileTTF(FONT_PATH.c_str(), 16.0f, &fontCfg) == nullptr)
+        io.Fonts->AddFontDefault();
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window.handle(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
@@ -343,6 +375,9 @@ int main() {
     cout << "Loaded map: " << level.renderChunks.size() << " texture chunks, "
         << (level.collisionVertices.size() / 9) << " collision triangles, "
         << level.pointLights.size() << " point lights\n";
+    g_Console.log("Loaded map: " + std::to_string(level.renderChunks.size()) + " texture chunks, "
+        + std::to_string(level.collisionVertices.size() / 9) + " collision triangles, "
+        + std::to_string(level.pointLights.size()) + " point lights");
 
     glm::vec3 sceneMin(1e9f), sceneMax(-1e9f);
     for (size_t i = 0; i + 2 < level.collisionVertices.size(); i += 3) {
@@ -385,6 +420,14 @@ int main() {
 
     if (level.hasPlayerStart) {
         player.m_Position = level.playerStart;
+    }
+
+    // Jolt Physics world: static mesh from the level collision triangles plus a virtual
+    // character that owns the player's vertical movement (gravity, falling, landing).
+    JoltWorld joltWorld;
+    if (!joltWorld.init(collisionMesh, player.m_Position)) {
+        cout << "Warning: failed to initialise Jolt Physics world\n";
+        g_Console.logError("Failed to initialise Jolt Physics world");
     }
 
     DebugDraw debugDraw; debugDraw.init();
@@ -455,6 +498,8 @@ int main() {
     bool wireframe = false;
     bool tKeyWasDown = false;
     bool tildeWasDown = false;
+    bool escWasDown = false;
+    bool f1WasDown = false;
     bool showDebugPanel = true;
 
     float deltaTime = 0.0f, lastFrame = 0.0f;
@@ -482,23 +527,47 @@ int main() {
             fpsTimer = 0.0f;
         }
 
-        if (glfwGetKey(window.handle(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window.handle(), true);
+        // Cursor/mouse state follows whichever overlay is open (console, debug panel).
+        auto syncMouse = [&]() {
+            mouseLookEnabled = !g_Console.isOpen() && !showDebugPanel;
+            window.setCursorDisabled(mouseLookEnabled);
+        };
 
+        // Esc closes the console first; when it is closed Esc quits the game.
+        bool escDown = glfwGetKey(window.handle(), GLFW_KEY_ESCAPE) == GLFW_PRESS;
+        if (escDown && !escWasDown) {
+            if (g_Console.isOpen()) {
+                g_Console.close();
+                syncMouse();
+            }
+            else {
+                glfwSetWindowShouldClose(window.handle(), true);
+            }
+        }
+        escWasDown = escDown;
+
+        // Tilde toggles the developer console.
         bool tildeDown = glfwGetKey(window.handle(), GLFW_KEY_GRAVE_ACCENT) == GLFW_PRESS;
         if (tildeDown && !tildeWasDown) {
-            showDebugPanel = !showDebugPanel;
-            mouseLookEnabled = !showDebugPanel;
-            window.setCursorDisabled(mouseLookEnabled);
+            g_Console.toggle();
+            syncMouse();
         }
         tildeWasDown = tildeDown;
+
+        // F1 toggles the debug panel (moved off tilde to make room for the console).
+        bool f1Down = glfwGetKey(window.handle(), GLFW_KEY_F1) == GLFW_PRESS;
+        if (f1Down && !f1WasDown) {
+            showDebugPanel = !showDebugPanel;
+            syncMouse();
+        }
+        f1WasDown = f1Down;
 
         bool tDown = glfwGetKey(window.handle(), GLFW_KEY_T) == GLFW_PRESS;
         if (tDown && !tKeyWasDown) wireframe = !wireframe;
         tKeyWasDown = tDown;
 
         if (mouseLookEnabled) {
-            player.update(window.handle(), collisionMesh, deltaTime, camera);
+            player.update(window.handle(), deltaTime, camera, joltWorld);
         }
         else {
             camera.position = player.m_Position + glm::vec3(0.0f, player.eyeHeight(), 0.0f);
@@ -740,10 +809,14 @@ int main() {
             ImGui::Separator();
             ImGui::Checkbox("Wireframe (T)", &wireframe);
             ImGui::Text("Crouch: Left Ctrl / C");
-            ImGui::Text("Toggle Panel / Mouse: ` (tilde)");
+            ImGui::Text("Console: ~ (tilde)");
+            ImGui::Text("Toggle Panel / Mouse: F1");
 
             ImGui::End();
         }
+
+        // Developer console overlay (drawn on top of everything).
+        g_Console.draw((float)window.width(), (float)window.height());
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
