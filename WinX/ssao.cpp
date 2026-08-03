@@ -1,3 +1,37 @@
+// ============================================================================
+// ssao.cpp - Screen-Space Ambient Occlusion
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Makes corners, cracks and crevices darker where they are hard for light to
+// reach. It is a screen-space trick: instead of tracing rays through the 3D
+// world, it reads the G-Buffer and samples nearby pixels to estimate how
+// "blocked in" each point is. The result is a grayscale texture (0 = fully
+// occluded/dark, 1 = fully open/bright).
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - The GLSL ssaoFragSrc is the whole algorithm in ~25 lines. Read it line by
+//   line: for each pixel, take the position/normal from the G-Buffer, then for
+//   each of the 32 kernel samples compare depths. If the sampled point is closer
+//   to the camera than our sample (and within range), it counts as occlusion.
+// - The 32 samples (m_kernel) are generated on the CPU in init() with random
+//   values, then biased to be denser near the surface (lerp(0.1,1.0,scale^2)).
+// - The tiny 4x4 noise texture (m_noiseTex) rotates the kernel per pixel so the
+//   banding of 32 samples doesn't look like repeating patterns.
+// - renderSSAO(): draws a full-screen quad with the G-Buffer + noise bound,
+//   outputting the occlusion value into m_ssaoTex. blur() then smooths it with
+//   a simple 4x4 box blur to hide noise.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - SSAO is the cheapest form of ambient occlusion - it only looks at the 2D
+//   screen, so it can be wrong at edges, but it runs in real time.
+// - radius (0.5) and the kernel size (32) in the shader are the quality knobs.
+// - The final lighting pass (main.cpp) multiplies the sun and point-light terms
+//   by this AO value.
+// ============================================================================
 #include "ssao.h"
 #include <random>
 #include <iostream>

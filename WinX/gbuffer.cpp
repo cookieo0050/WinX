@@ -1,3 +1,36 @@
+// ============================================================================
+// gbuffer.cpp - The Deferred Rendering G-Buffer
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Creates an off-screen framebuffer with THREE colour textures (plus a depth
+// renderbuffer). During the "geometry pass" the map is rendered into these
+// textures instead of the screen:
+//     m_gPosition    (RGBA16F) - world position of each surface point
+//     m_gNormal      (RGBA16F) - surface normal at each point
+//     m_gAlbedoSpec  (RGBA8)   - the flat texture colour (albedo)
+// Together these three images are called the "G-Buffer" (Geometry Buffer).
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - init(): the whole file, really. For each texture it does:
+//     glGenTextures -> glTexImage2D (allocate GPU memory) -> attach to FBO.
+//   Then it tells OpenGL which attachments to write with glDrawBuffers(3, ...)
+//   and attaches a depth renderbuffer so geometry also records depth.
+// - bindForWriting(): binds the FBO and sets the viewport - call this before
+//   the geometry pass so draws go into the G-Buffer instead of the screen.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - 16F textures hold floats (positions/normals need precision); 8-bit is fine
+//   for plain colours.
+// - NEAREST filtering: G-Buffer values are samples, not pictures - no filtering.
+// - "Deferred" means: we defer (postpone) lighting until later. main.cpp pass #6
+//   reads these three textures + shadows + AO + GI to compute final lighting.
+// - Viewing these textures directly = the F1 debug panel's Position/Normal/Albedo
+//   modes. They are the engine's raw "memory" of the scene.
+// ============================================================================
 #include "gbuffer.h"
 #include <iostream>
 using namespace std;

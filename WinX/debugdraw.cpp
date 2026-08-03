@@ -1,3 +1,31 @@
+// ============================================================================
+// debugdraw.cpp - Simple 3D Debug Lines / Points / Triangles
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// A tiny helper for drawing one-off lines, dots and triangles in the 3D world
+// (e.g. visualising a raycast or a collision normal). It uploads the few points
+// to the GPU and draws them with a flat-colour shader, ignoring depth so debug
+// shapes show through walls.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - init(): creates the shader and one VAO/VBO used by all draw functions.
+// - drawLine/drawPoint/drawTriangle: all three do the same pattern:
+//     1. use the shader
+//     2. upload the coordinates into the VBO (glBufferData, DYNAMIC because the
+//        buffer is re-filled every call)
+//     3. disable depth test, draw, re-enable depth test
+//   The GLSL shaders are at the top of the file (debugVertSrc / debugFragSrc).
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - This is "immediate mode" debugging: it discards state each call, so it is
+//   simple but not efficient - only use it for a few shapes per frame.
+// - drawPoint sets gl_PointSize = 8 pixels in the vertex shader, overridable
+//   with the `size` parameter.
+// ============================================================================
 #include "debugdraw.h"
 
 static const char* debugVertSrc = R"(

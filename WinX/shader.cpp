@@ -1,3 +1,34 @@
+// ============================================================================
+// shader.cpp - GLSL Shader Compilation & Uniform Helpers
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Compiles the GLSL shader programs used everywhere in the engine and wraps
+// glUniform* calls into easy C++ methods. Every Shader object owns one GPU
+// program (vertex + fragment shader linked together).
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - Constructor: takes two source strings (see the big strings in main.cpp),
+//   creates/compiles a vertex shader, creates/compiles a fragment shader, then
+//   links them into a single program with an ID.
+// - checkCompileErrors(): if a shader fails to compile, prints the GPU error log
+//   to the terminal. These messages are your best friend when a shader breaks.
+// - fromFiles(): alternate constructor that reads .vert/.frag text files instead
+//   of taking strings (the engine currently passes strings, so this is unused).
+// - setBool/setInt/setFloat/setVec2/setVec3/setMat4: each one looks up the
+//   uniform by name inside the program and uploads a value. Uniforms are the
+//   way the CPU sends data to the GPU mid-frame (light positions, matrices, ...).
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - A "uniform" is a read-only variable in a shader you set before drawing.
+// - glGetUniformLocation() can be slow in loops - caching it would be an
+//   optimisation (not done here for simplicity).
+// - Shader "programs" are the single most important GPU concept: geometry +
+//   rendering recipe = a program.
+// ============================================================================
 #include "shader.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <fstream>

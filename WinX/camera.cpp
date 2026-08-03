@@ -1,3 +1,33 @@
+// ============================================================================
+// camera.cpp - First-Person Camera
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Implements a classic first-person camera. It stores a position, a forward
+// direction, yaw (left/right rotation) and pitch (up/down rotation), and builds
+// the "view matrix" that every render pass uses to draw the world from the
+// player's eyes.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - getViewMatrix(): uses glm::lookAt(eye, eye+front, up) to produce the matrix
+//   that transforms world coordinates into camera coordinates. Read this first.
+// - processKeyboard(): WASD movement. Right vector = cross(front, up). Moving
+//   "forward" means moving along `front`, "right" means along the right vector.
+// - processMouseMovement(): mouse offset changes yaw/pitch; pitch is clamped to
+//   +/-89 degrees so the camera can't flip over your head.
+// - updateVectors(): converts yaw/pitch (in degrees) into a 3D direction using
+//   spherical coordinates (sin/cos). This is THE math of looking around - if you
+//   change it, look direction breaks, so be careful.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - Yaw starts at -90.0 so the initial view faces -Z (OpenGL's "into screen").
+// - m_speed (3.0) and m_sensitivity (0.1) are the two "feel" tunables.
+// - NOTE: the actual player controller in player.cpp does its OWN WASD handling
+//   and reads camera.front - the two files work together but are separate.
+// ============================================================================
 #include "camera.h"
 #include <glm/gtc/matrix_transform.hpp>
 

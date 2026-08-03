@@ -1,3 +1,40 @@
+// ============================================================================
+// collision.cpp - Triangle Mesh Collision & Raycasting
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Builds a spatial structure over the level's collision triangles and answers
+// two questions fast:
+//   1. "Does this ray hit the world, and where?"  -> raycast()
+//   2. "Push this sphere out of any triangles it overlaps." -> resolveSphereCollision()
+// It is the engine's own (pre-Jolt) collision system. The Jolt physics world in
+// jolt_world.cpp is built from the SAME triangles, but the custom raycast here
+// is still used for the player's stair/step checks.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - buildFromVertices(): copies the level's triangle soup into m_triangles
+//   (optionally transforming each point by a matrix), then calls buildGrid().
+// - buildGrid() + queryCells(): a simple "uniform grid". The world is divided
+//   into m_cellSize boxes; each triangle is registered in every cell it touches.
+//   Instead of testing every triangle, we only test the cells near a point.
+//   `cellKey()` packs x/y/z cell indices into one int64 to use as a map key.
+// - raycast(): the classic Amanatides & Woo grid traversal (Google that name).
+//   It steps from cell to cell along the ray, testing only the triangles in each
+//   visited cell, and keeps the closest hit. This is what makes raycasts cheap.
+// - rayTriangleIntersect(): the Möller-Trumbore ray/triangle intersection test.
+// - closestPointOnTriangle() / resolveSphereCollisionDetailed(): finds the
+//   nearest point on a triangle to the sphere centre; if closer than the radius,
+//   the sphere is pushed out along the contact normal. Repeats up to 3 passes so
+//   a corner/crack between two triangles can't trap the player.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - Collision here is done in the engine's own coordinate space (converted from
+//   map space in mapfile.cpp) - no scaling is applied inside this file.
+// - If you tune m_cellSize (header), smaller = more memory but faster queries.
+// ============================================================================
 #include "collision.h"
 #include <cmath>
 #include <algorithm>

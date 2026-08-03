@@ -1,3 +1,50 @@
+// ============================================================================
+// jolt_world.cpp - Jolt Physics World & Virtual Character
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Wraps the Jolt Physics library (JoltPhysics-master/) into a single class that
+// owns: the static world body (built from the level's collision triangles), a
+// "virtual character" capsule for the player, and per-frame stepping. The player
+// controller (player.cpp) picks the desired velocity; this file applies gravity,
+// moves the capsule, resolves collisions against the world and hands back the
+// final position/velocity/grounded state.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - The nested structs at the top (BPLayerInterface, ObjVsBpFilter,
+//   ObjPairFilter) tell Jolt which object layers collide with each other
+//   (NON_MOVING world vs MOVING character). They are boilerplate you can mostly
+//   ignore unless you add new layers.
+// - init(): the "big setup". It boots the whole Jolt library (factory, types,
+//   allocator), copies the collision triangles into a JPH::MeshShape as a static
+//   body, then creates the CharacterVirtual - a capsule 1.8m tall, 0.35m radius,
+//   with maxSlopeAngle = 35 degrees (tuned so walls can't be climbed).
+// - step(): per frame. It:
+//   1. Applies gravity to the desired velocity (capped at m_MaxFallSpeed).
+//   2. Calls m_Character->ExtendedUpdate - Jolt's character controller that does
+//      gravity + collision + ground detection in one call.
+//   3. Reads back position/velocity/grounded. grounded uses GetGroundState()==
+//      OnGround (not IsSupported) so leaning on a wall doesn't count as standing.
+//   4. If grounded but the frame barely moved horizontally, tries tryStepUp()
+//      for deterministic stair climbing.
+// - tryStepUp(): a hand-written stair stepper. It raycasts (with the custom
+//   collision.cpp mesh) to check 4 things: headroom after lifting, forward
+//   clearance, that the blocker is a steep riser (not a ramp), and that there is
+//   a real flat tread to land on. Only then does it teleport the feet up.
+// - shutdown(): tears everything down in reverse order (character first, then
+//   the Jolt factory) - Jolt asserts if you destroy things in the wrong order.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - Jolt is a third-party physics engine (the // Jolt/ includes). This file is
+//   the ONLY place the engine talks to it - everything else just uses JoltWorld.
+// - CharacterVirtual = no actual rigid body, just a moving capsule; perfect for
+//   FPS controllers because the game controls its velocity directly.
+// - m_Gravity, m_MaxFallSpeed, m_StepHeight, m_CharacterHeight/Radius live in the
+//   header - those are the "feel" constants.
+// ============================================================================
 #include "jolt_world.h"
 #include "console.h"
 #include <iostream>

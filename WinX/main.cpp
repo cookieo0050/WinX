@@ -1,4 +1,63 @@
-﻿#include <glad/glad.h>
+﻿// ============================================================================
+// main.cpp - Engine Entry Point and Main Render Loop
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// This is the "brain" of the engine. When the program starts, execution begins
+// in main() at the bottom of this file. Everything the engine does happens
+// either (a) during startup inside main() before the loop, or (b) once per
+// frame inside the big `while (!window.shouldClose())` loop.
+//
+// HOW TO READ THIS FILE (read it top to bottom in this order)
+// ----------------------------------------------------------------------------
+// 1. The #include list        - tells you which other engine files this file uses.
+// 2. The path constants       - hard-coded folder/file locations on disk
+//    (TEXTURES_FOLDER, MAP_PATH, FONT_PATH, ...).
+// 3. The SHADER SOURCE CODES  - the GLSL shader programs are written here as raw
+//    C strings. GLSL is a separate GPU language, stored inline so the engine has
+//    no external .glsl files to load.
+// 4. Helper callbacks         - mouse_callback, glfw_error_callback.
+// 5. main()                   - setup, then the frame loop, then cleanup.
+//
+// THE RENDER LOOP (the heart of the engine)
+// ----------------------------------------------------------------------------
+// Every frame the engine runs these passes in order. Each pass is numbered in a
+// comment in the code. Think of them as stages in a factory line:
+//
+//   1. SUN SHADOW PASS      Render the map from the sun's point of view into a
+//                           depth texture (shadowMap). Only stores distance-to-sun.
+//   2. POINT LIGHT SHADOW   Same idea but for each coloured point light, stored in
+//                           a cube map (6 directions). Runs ONLY ONCE (cached).
+//   3. G-BUFFER PASS        Render the map into 3 textures: position, normal and
+//                           colour (albedo). This is "deferred rendering" - we keep
+//                           the raw surface data instead of lighting it immediately.
+//   4. SSAO & SSGI PASS     Two "post" passes that read the G-Buffer: SSAO darkens
+//                           corners/cracks, SSGI adds soft bounced colour.
+//   5. BLIT DEPTH BUFFER    Copies the depth so later passes can depth-test.
+//   6. DEFERRED LIGHTING    Reads the G-Buffer + shadows + AO + GI and computes the
+//                           final lit colour for every pixel. (Or shows a debug view.)
+//   7. SKYBOX               Draws the sky behind everything.
+//   8. CROSSHAIR            A small texture drawn in the centre of the screen.
+//   9. IMGUI OVERLAY        The "Debug Control Center" (F1) + developer console (~).
+//
+// KEY IDEAS TO UNDERSTAND
+// ----------------------------------------------------------------------------
+// - "Deferred rendering" vs "forward": forward lights each object immediately;
+//   deferred saves geometry data to textures first, then lights the whole screen.
+// - GLSL shader strings: search for gbufferFragSrc etc. These run on the GPU.
+// - A "pass" is one full draw of something into a texture before compositing.
+// - The debug panel (F1) lets you flip between Final / Position / Normal / Albedo
+//   views of the G-Buffer - great way to see what each pass actually produces.
+// - The console (~) is defined in console.cpp; typing `help` lists commands.
+//
+// COMMON MISTAKES WHEN EDITING
+// ----------------------------------------------------------------------------
+// - If you change a shader string, the error shows in the console/terminal.
+// - If you move a file, update the hard-coded paths at the top of main().
+// - Push/Pop of ImGui styles must be balanced (see console.cpp for a past bug).
+// ============================================================================
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>

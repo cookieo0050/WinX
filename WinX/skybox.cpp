@@ -1,3 +1,33 @@
+// ============================================================================
+// skybox.cpp - Cubemap Sky Background
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Draws the sky. It loads one image and applies it to all 6 faces of a cube map
+// texture, then draws a giant cube around the camera so you always see the sky
+// in every direction. (The source image is a 360 panorama-style picture.)
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - skyboxVertices: the 36 vertices (12 triangles) of a 1x1x1 cube centred at
+//   the origin. Its position IS the texture coordinate (TexCoords = aPos), which
+//   is exactly what cubemap sampling needs - a direction, not a 2D uv.
+// - init(): builds the cube mesh, loads the image, then calls glTexImage2D six
+//   times - once for each cube face (POSITIVE_X, NEGATIVE_X, ... ) - reusing the
+//   same pixel data for every face. A real game would use 6 different images.
+// - draw(): renders with glDepthFunc(GL_LEQUAL) and positions the cube at the
+//   camera with the translation stripped out (mat3(mat3(view))) so the skybox
+//   "follows" you - you can never walk to the edge of it. pos.xyww forces the
+//   depth to the far plane so it always renders behind everything.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - The skybox cube is drawn with depth test LEQUAL and depth exactly at 1.0, so
+//   it only shows where nothing else was drawn.
+// - If you want a prettier sky, replace this with 6 face images or an equirect
+//   converter - the structure stays the same.
+// ============================================================================
 #include "skybox.h"
 #include "stb_image.h"
 #include <iostream>

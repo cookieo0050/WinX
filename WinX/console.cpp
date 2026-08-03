@@ -1,3 +1,39 @@
+// ============================================================================
+// console.cpp - In-Game Developer Console
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// The grey, semi-transparent overlay across the top of the screen you open with
+// the tilde (~) key. It shows live engine log lines (errors, map info, ...) and
+// lets you type commands (help, clear, echo, pos, quit). Any engine system can
+// write to it by calling the global `g_Console.log(...)` / `.logError(...)`.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - Console() constructor: registers the built-in commands. registerCommand()
+//   stores (name, function) pairs; execute() looks one up by name and calls it.
+// - log()/logError()/clear(): manage the ring buffer m_lines (a deque capped at
+//   m_maxLines = 200 so it can't grow forever).
+// - draw(): the entire UI in one ImGui function. Read it in order:
+//     1. If closed, return immediately.
+//     2. Push style vars + colors (window size, transparency, grey palette).
+//     3. A scrollable child window that prints every line, colouring errors red
+//        and unknown commands amber (otherwise plain grey).
+//     4. The "> " prompt and the ImGui InputText box. Submitting the box calls
+//        execute(). consoleCharFilter blocks the `/~ characters being typed.
+//   IMPORTANT: every PushStyleColor/PushStyleVar MUST be matched by a
+//   PopStyleColor/PopStyleVar - if the counts differ, ImGui logs
+//   "Calling PopStyleColor() too many times!" (we hit exactly that bug before).
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - m_autoScroll keeps the log pinned to the newest line while you're at the
+//   bottom, but lets you scroll up to read history.
+// - Esc closes the console before it quits the game (logic lives in main.cpp).
+// - The console is the easiest place to add a debug command: registerCommand()
+//   in the constructor and it shows up in `help` automatically.
+// ============================================================================
 #include "console.h"
 #include "imgui.h"
 #include <algorithm>

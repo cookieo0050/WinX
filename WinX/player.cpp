@@ -1,3 +1,48 @@
+// ============================================================================
+// player.cpp - First-Person Movement Controller (GoldSrc-style)
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Turns keyboard input into player motion with the classic Half-Life "GoldSrc"
+// feel: quick acceleration on the ground, floaty air control, friction that
+// stops you fast, a jump buffer, a coyote timer, and smooth crouching. Actual
+// collision and gravity are handled by Jolt (jolt_world.cpp) - this file only
+// decides what velocity the player WANTS, then hands it to Jolt.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - update() is called every frame (only while the mouse is locked). It:
+//   1. Builds forward/right vectors from the camera's yaw (ignoring pitch so
+//      you can't fly by looking up).
+//   2. Sums WASD into a "wish direction" (wishDir) scaled by walk/sprint/crouch.
+//   3. Jump logic: m_jumpBufferTimer ("I pressed jump recently") and
+//      m_lastGroundedTime/coyote ("I was on the ground recently") - the two
+//      together make jumping feel responsive even when timed slightly early or
+//      late. This is the modern take on GoldSrc's jump.
+//   4. Chooses ground acceleration (applyFriction + accelerate) or air control
+//      (airAccelerate). These three functions ARE the GoldSrc movement feel.
+//   5. Hands the desired velocity to joltWorld.step(), which integrates gravity,
+//      collides the capsule with the world, and returns the resolved position/
+//      velocity/grounded state.
+//   6. Smoothly interpolates eye height when crouching (duck feel).
+//   7. Sets camera.position to the eyes (feet + eye height).
+//
+// THE THREE MOVEMENT MATH FUNCTIONS (study these)
+// ----------------------------------------------------------------------------
+// - applyFriction(): cut horizontal speed by a fixed drop each second. Below
+//   m_Stopspeed it scales so you fully stop.
+// - accelerate(): add to velocity along the wish direction, capped per frame.
+// - airAccelerate(): same but capped by m_AirSpeedCap (slower, floatier).
+// These are copied from the GoldSrc/Half-Life SDK and are what make the movement
+// feel "right" rather than generic.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - deltaTime is clamped to 0.05s so a stutter frame doesn't teleport you.
+// - The split of responsibilities matters: Player picks velocity, Jolt does the
+//   physics. Change movement feel here; change collision there.
+// ============================================================================
 #include "player.h"
 #include "jolt_world.h"
 #include <cmath>

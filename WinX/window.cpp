@@ -1,4 +1,33 @@
-﻿#include "window.h"
+﻿// ============================================================================
+// window.cpp - GLFW Window Wrapper
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// A thin wrapper around GLFW (the library that creates OS windows and handles
+// input). It hides all the raw GLFW calls so the rest of the engine can just
+// do `Window window(800, 600, "WinX Engine")` and forget the details.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - Constructor: init GLFW -> request an OpenGL 3.3 core context -> create the
+//   window -> load GLAD (the OpenGL function loader, required before ANY OpenGL
+//   call) -> set up a resize callback and depth testing.
+// - framebuffer_size_callback: fires when the window is resized; updates the
+//   viewport and records the new size.
+// - swapBuffersAndPollEvents: the two calls that end every frame - draw what was
+//   rendered (swap) and handle queued window/input events (poll).
+// - setCursorDisabled: used to lock the mouse to the centre for first-person look.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - GLFW creates the window, GLAD lets you actually use OpenGL functions.
+//   window.cpp is where the two are glued together.
+// - glfwSwapInterval(0) disables VSync -> no 60 FPS cap.
+// - The Window object is attached to the GLFW window via UserPointer so the C
+//   callback can reach back into the C++ object.
+// ============================================================================
+#include "window.h"
 #include <iostream>
 using namespace std;
 

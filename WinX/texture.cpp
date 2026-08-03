@@ -1,3 +1,30 @@
+// ============================================================================
+// texture.cpp - 2D Texture Loading (via stb_image)
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Loads a PNG (or any common image format) from disk into a GPU texture so it
+// can be drawn on geometry. Uses the single-header library stb_image.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - load(): generate a texture -> set wrap/filter parameters -> use stbi_load to
+//   read the image bytes from disk -> glTexImage2D uploads those bytes to the GPU
+//   -> glGenerateMipmap builds the lower-resolution versions -> free CPU copy.
+// - bind(unit): picks a texture slot (unit 0, 1, 2, ...) and binds the texture
+//   there. Shaders then read from that unit via a uniform like "texture1".
+// - getImageSize(): just asks stbi_info for the width/height of a file WITHOUT
+//   loading it. Used by the map loader to scale UVs correctly.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - mipmaps (MIN_FILTER = GL_LINEAR_MIPMAP_LINEAR) stop textures from shimmering
+//   when far away.
+// - GL_REPEAT lets textures tile across big surfaces (walls/floors).
+// - STB_IMAGE_IMPLEMENTATION must be defined in exactly ONE .cpp file so the
+//   library's code is compiled - that is what this line at the top does.
+// ============================================================================
 #include "texture.h"
 #include <iostream>
 #include <string>

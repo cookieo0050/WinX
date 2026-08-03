@@ -1,3 +1,41 @@
+// ============================================================================
+// mapfile.cpp - Quake-style .map Level Loader
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Reads a text .map file (Quake/Source brush format - see Maps/Testroom.map)
+// and produces a LevelData: render chunks (per-texture vertex lists), collision
+// triangles, point lights and the player start position.
+//
+// HOW TO UNDERSTAND IT (the pipeline)
+// ----------------------------------------------------------------------------
+// 1. parseEntities(): walks the file's `{ }` nesting to find "entities".
+//    depth 1 = entity ("info_player_start", "light", "worldspawn", ...).
+//    depth 2 = brush (a solid block) made of planes.
+//    A line like `"key" "value"` is a key/value property on an entity.
+// 2. parsePlaneLine(): one brush face is defined by 3 points + a texture name +
+//    UV axes + scale. The plane's normal and distance are derived from the points.
+// 3. generateBrushGeometry(): the clever bit. A brush is the region inside N
+//    half-spaces. This function intersects every triple of planes
+//    (solve the 3x3 linear system) and keeps the point only if it lies inside
+//    ALL planes. That gives the polygon (corner vertices) of every face. The
+//    vertices are then sorted around the face centre so the polygon is convex
+//    and can be triangulated correctly.
+// 4. emitFace(): triangulates each face polygon (fan around vertex 0) and writes
+//    8 floats per vertex into the render chunk for that texture:
+//    [x y z | nx ny nz | u v]. The same positions are appended to
+//    collisionVertices (3 floats each) for the physics/collision systems.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - Coordinate conversion: Quake maps use "Z up, Y forward"; the engine uses
+//   "Y up, Z forward". convertPos does the swap (x, y, z) -> (x, z, -y).
+//   MAP_SCALE = 1/32 shrinks the huge map units into metres.
+// - UVs: u = (dot(pos,uAxis)/scaleX + uOffset) / texWidth, same for v. Changing
+//   the uAxis/scale in the map editor directly changes texture alignment.
+// - "Brush" = a convex solid, "Entity" = an object that holds brushes/properties.
+// ============================================================================
 #include "mapfile.h"
 #include <fstream>
 #include <sstream>

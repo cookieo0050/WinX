@@ -1,3 +1,36 @@
+// ============================================================================
+// shadow.cpp - Directional (Sun) Shadow Mapping
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Creates the depth texture used for the sun's directional shadows. It stores a
+// depth-only framebuffer, renders the map from the sun's viewpoint, and gives
+// the main.cpp pass #6 the matrix that converts world positions into sun-view
+// coordinates (lightSpaceMatrix) so it can compare depths and detect shadows.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - init(): makes an FBO with a DEPTH_COMPONENT texture attached. No colour
+//   attachment - the only thing we care about is "how far is this from the sun?"
+//   (that's all a shadow map is). Clamped to border colour 1.0 (max depth =
+//   "no geometry here" = not shadowed).
+// - getLightSpaceMatrix(): places a camera where the sun is, looking at the
+//   scene centre, with an orthographic projection that covers the whole scene
+//   (radius = sceneRadius). Returns proj * view.
+// - beginRender()/endRender(): switch into/out of the depth framebuffer.
+//   main.cpp draws every chunk with depthShader while this is active (pass #1).
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - The depth shaders (depthVertSrc/depthFragSrc) are trivial: write depth only.
+//   The fragment shader body is literally empty `{}` because depth is written
+//   automatically before the fragment shader runs.
+// - Front-face culling is used in main.cpp during this pass to avoid "shadow
+//   acne" (self-shadowing due to depth precision).
+// - Directional light = "from infinitely far away" = orthographic projection.
+//   Point lights instead use cube maps (see pointShadowCubemaps in main.cpp).
+// ============================================================================
 #include "shadow.h"
 #include <glm/gtc/matrix_transform.hpp>
 

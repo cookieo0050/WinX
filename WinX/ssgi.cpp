@@ -1,3 +1,38 @@
+// ============================================================================
+// ssgi.cpp - Screen-Space Global Illumination
+// ============================================================================
+//
+// WHAT THIS FILE IS
+// ----------------------------------------------------------------------------
+// Adds the "bounce light": colour that spills from one surface onto another
+// (e.g. a red wall tints the floor beside it). Like SSAO it works in screen
+// space by sampling the G-Buffer instead of tracing real rays. The output is a
+// colour texture (indirect light per pixel) that the lighting pass adds on top
+// of the direct sun/point lighting.
+//
+// HOW TO UNDERSTAND IT
+// ----------------------------------------------------------------------------
+// - ssgiFragSrc mirrors SSAO's structure but outputs COLOUR:
+//     for each of 24 samples around the pixel:
+//       1. project the sample back to screen space (like SSAO)
+//       2. look up the sampled surface's albedo (its colour)
+//       3. attenuate by distance (1/(1+d^2))
+//       4. weight by how "facing" the receiver and emitter are
+//          (receiverTerm = dot(normal, toSample), emitterTerm = dot(sampledNormal,
+//          -toSample)) - this is the actual GI math, cheapened for screen space.
+// - init(): builds the 24-sample kernel + noise texture and two framebuffers,
+//   exactly like SSAO, but textures are RGB16F (they store colour, not depth).
+// - render()/blur(): same full-screen quad pattern as SSAO.
+//
+// KEY IDEAS
+// ----------------------------------------------------------------------------
+// - SSGI makes interiors feel warm and grounded - without it light looks flat.
+// - It is view-dependent and only bounces light that is on screen, hence
+//   "screen-space"; a full GI solution (radiance cascades, lightmaps) would be
+//   far more expensive.
+// - intensity (1.5) and radius (1.0) in the shader control how strong/far the
+//   bounce reaches.
+// ============================================================================
 #include "ssgi.h"
 #include <random>
 #include <iostream>
