@@ -1,3 +1,3 @@
 # WinX
 
-banana
+Under MIT license 
