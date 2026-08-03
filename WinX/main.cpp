@@ -500,7 +500,7 @@ int main() {
     bool tildeWasDown = false;
     bool escWasDown = false;
     bool f1WasDown = false;
-    bool showDebugPanel = true;
+    bool showDebugPanel = false;
 
     float deltaTime = 0.0f, lastFrame = 0.0f;
     float fpsTimer = 0.0f;
