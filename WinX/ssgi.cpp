@@ -128,12 +128,15 @@ uniform sampler2D ssgiInput;
 void main() {
     vec2 texelSize = 1.0 / vec2(textureSize(ssgiInput, 0));
     vec3 result = vec3(0.0);
+    float totalWeight = 0.0;
     for (int x = -2; x < 2; x++)
         for (int y = -2; y < 2; y++) {
             vec2 offset = vec2(float(x), float(y)) * texelSize;
-            result += texture(ssgiInput, TexCoords + offset).rgb;
+            float weight = 1.0 / (1.0 + float(x*x + y*y));
+            result += texture(ssgiInput, TexCoords + offset).rgb * weight;
+            totalWeight += weight;
         }
-    FragColor = result / 16.0;
+    FragColor = result / totalWeight;
 }
 )";
 
@@ -180,8 +183,8 @@ void SSGI::init(int width, int height) {
     glGenTextures(1, &m_tex);
     glBindTexture(GL_TEXTURE_2D, m_tex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_tex, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cerr << "SSGI FBO incomplete\n";
@@ -191,8 +194,8 @@ void SSGI::init(int width, int height) {
     glGenTextures(1, &m_blurTex);
     glBindTexture(GL_TEXTURE_2D, m_blurTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_blurTex, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cerr << "SSGI blur FBO incomplete\n";

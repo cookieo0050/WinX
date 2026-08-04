@@ -230,11 +230,13 @@ float computeSunShadow(vec3 fragPos, vec3 normal, vec3 lightDir) {
     float shadow = 0.0;
     float softRadius = 1.0; 
     vec2 texelSize = 1.0 / textureSize(shadowMapTex, 0);
+    float softEdge = 0.003;
 
     for (int i = 0; i < 16; i++) {
         vec2 offset = poissonDisk[i] * texelSize * softRadius;
         float pcfDepth = texture(shadowMapTex, projCoords.xy + offset).r;
-        shadow += (projCoords.z - bias > pcfDepth) ? 1.0 : 0.0;
+        float diff = (projCoords.z - bias) - pcfDepth;
+        shadow += smoothstep(-softEdge, softEdge, diff);
     }
     return shadow / 16.0;
 }
@@ -267,7 +269,9 @@ float computePointShadow(int index, vec3 fragPos, vec3 lightPos, float farPlane,
     else if (index == 15) closestDepth = texture(pointShadowMaps[15], fragToLight).r;
 
     closestDepth *= farPlane;
-    return (currentDepth - bias > closestDepth) ? 1.0 : 0.0;
+    float diff = (currentDepth - bias) - closestDepth;
+    float soft = max(0.02, closestDepth * 0.02);
+    return smoothstep(-soft, soft, diff);
 }
 
 void main() {
@@ -509,8 +513,8 @@ int main() {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, 0, GL_DEPTH_COMPONENT,
                 SHADOW_CUBE_RES, SHADOW_CUBE_RES, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         }
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);

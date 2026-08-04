@@ -109,12 +109,15 @@ uniform sampler2D ssaoInput;
 void main() {
     vec2 texelSize = 1.0 / vec2(textureSize(ssaoInput, 0));
     float result = 0.0;
+    float totalWeight = 0.0;
     for (int x = -2; x < 2; x++)
         for (int y = -2; y < 2; y++) {
             vec2 offset = vec2(float(x), float(y)) * texelSize;
-            result += texture(ssaoInput, TexCoords + offset).r;
+            float weight = 1.0 / (1.0 + float(x*x + y*y));
+            result += texture(ssaoInput, TexCoords + offset).r * weight;
+            totalWeight += weight;
         }
-    FragColor = result / 16.0;
+    FragColor = result / totalWeight;
 }
 )";
 
@@ -161,8 +164,8 @@ void SSAO::init(int width, int height) {
     glGenTextures(1, &m_ssaoTex);
     glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoTex, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cerr << "SSAO FBO incomplete\n";
@@ -172,8 +175,8 @@ void SSAO::init(int width, int height) {
     glGenTextures(1, &m_ssaoBlurTex);
     glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoBlurTex, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cerr << "SSAO blur FBO incomplete\n";
