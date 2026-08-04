@@ -26,5 +26,5 @@ SSAO
 Position 
 <img width="1891" height="958" alt="Screenshot 2026-08-02 131110" src="https://github.com/user-attachments/assets/1f82a16e-591b-4ca9-91dd-d95034bac592" />
 
-Lighting :)
+Lighting (lighting is being worked on!)
 <img width="1371" height="931" alt="Screenshot 2026-08-03 202450" src="https://github.com/user-attachments/assets/d05353c0-4a15-4f8b-a41e-8b2f0bf9b040" />
