@@ -4,8 +4,8 @@
 //
 // WHAT THIS FILE IS
 // ----------------------------------------------------------------------------
-// The grey, semi-transparent overlay across the top of the screen you open with
-// the tilde (~) key. It shows live engine log lines (errors, map info, ...) and
+// The Windows 98-style bar across the top of the screen you open with the
+// tilde (~) key. It shows live engine log lines (errors, map info, ...) and
 // lets you type commands (help, clear, echo, pos, quit). Any engine system can
 // write to it by calling the global `g_Console.log(...)` / `.logError(...)`.
 //
@@ -154,17 +154,17 @@ void Console::draw(float screenWidth, float screenHeight) {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 1.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 2.0f));
 
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.05f, 0.05f, 0.05f, 0.50f));
-    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.25f, 0.25f, 0.25f, 0.35f));
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.20f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.16f, 0.16f, 0.16f, 0.60f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.20f, 0.20f, 0.20f, 0.65f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.24f, 0.24f, 0.24f, 0.70f));
-    ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, ImVec4(0.09f, 0.09f, 0.09f, 0.5f));
-    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrab, ImVec4(0.30f, 0.30f, 0.30f, 0.5f));
-    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabHovered, ImVec4(0.40f, 0.40f, 0.40f, 0.6f));
-    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabActive, ImVec4(0.50f, 0.50f, 0.50f, 0.7f));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.76f, 0.76f, 0.76f, 0.97f));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.96f, 0.96f, 0.96f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.90f, 0.90f, 0.90f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, ImVec4(0.78f, 0.78f, 0.78f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrab, ImVec4(0.65f, 0.65f, 0.65f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabHovered, ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabActive, ImVec4(0.55f, 0.55f, 0.55f, 1.0f));
 
     if (ImGui::Begin("##EngineConsole", nullptr, flags)) {
         const float inputHeight = ImGui::GetFrameHeightWithSpacing();
@@ -177,13 +177,13 @@ void Console::draw(float screenWidth, float screenHeight) {
                 || ImGui::GetScrollY() >= ImGui::GetScrollMaxY() - 1.0f;
 
             for (const auto& line : m_lines) {
-                ImVec4 color = ImVec4(0.85f, 0.85f, 0.85f, 1.0f);
+                ImVec4 color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
                 if (line.rfind("[ERROR]", 0) == 0)
-                    color = ImVec4(1.0f, 0.45f, 0.45f, 1.0f);
+                    color = ImVec4(0.85f, 0.0f, 0.0f, 1.0f);
                 else if (line.rfind("[UNKNOWN]", 0) == 0)
-                    color = ImVec4(0.95f, 0.80f, 0.45f, 1.0f);
+                    color = ImVec4(0.65f, 0.35f, 0.0f, 1.0f);
                 else if (line.rfind(">", 0) == 0)
-                    color = ImVec4(0.70f, 0.70f, 0.70f, 1.0f);
+                    color = ImVec4(0.35f, 0.35f, 0.35f, 1.0f);
 
                 ImGui::PushStyleColor(ImGuiCol_Text, color);
                 ImGui::TextUnformatted(line.c_str());
@@ -196,7 +196,7 @@ void Console::draw(float screenWidth, float screenHeight) {
         }
         ImGui::EndChild();
 
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.35f, 0.35f, 0.35f, 1.0f));
         ImGui::TextUnformatted("> ");
         ImGui::PopStyleColor();
         ImGui::SameLine(0.0f, 4.0f);

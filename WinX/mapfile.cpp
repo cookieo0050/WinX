@@ -224,6 +224,69 @@ static void generateBrushGeometry(Brush& brush) {
     }
 }
 
+static void weldBrushVertices(vector<FaceGeom*>& faces, float epsilon = 0.01f) {
+    for (auto* face : faces) {
+        for (auto& v : face->polyVerts) {
+            for (auto* otherFace : faces) {
+                if (face == otherFace) continue;
+                for (auto& ov : otherFace->polyVerts) {
+                    if (glm::distance(v, ov) < epsilon) {
+                        v = ov;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void fixBrushTJunctions(vector<FaceGeom*>& faces, float epsilon = 0.02f) {
+    bool changed = true;
+    int iterations = 0;
+    while (changed && iterations < 10) {
+        changed = false;
+        iterations++;
+        for (size_t i = 0; i < faces.size(); i++) {
+            auto* face = faces[i];
+            if (face->polyVerts.size() < 3) continue;
+            for (size_t e = 0; e < face->polyVerts.size(); e++) {
+                glm::vec3 v0 = face->polyVerts[e];
+                glm::vec3 v1 = face->polyVerts[(e + 1) % face->polyVerts.size()];
+                glm::vec3 edgeDir = v1 - v0;
+                float edgeLen = glm::length(edgeDir);
+                if (edgeLen < 1e-6f) continue;
+                glm::vec3 edgeUnit = edgeDir / edgeLen;
+                for (size_t j = 0; j < faces.size(); j++) {
+                    if (i == j) continue;
+                    auto* otherFace = faces[j];
+                    for (auto& ov : otherFace->polyVerts) {
+                        glm::vec3 toOv = ov - v0;
+                        float proj = glm::dot(toOv, edgeUnit);
+                        if (proj <= epsilon || proj >= edgeLen - epsilon) continue;
+                        glm::vec3 closest = v0 + edgeUnit * proj;
+                        if (glm::distance(ov, closest) > epsilon) continue;
+                        face->polyVerts.insert(face->polyVerts.begin() + (e + 1), ov);
+                        changed = true;
+                        break;
+                    }
+                    if (changed) break;
+                }
+                if (changed) break;
+            }
+            if (changed) break;
+        }
+    }
+}
+
+static void seamPadBrushFaces(Brush& brush, float epsilon = 0.001f) {
+    for (auto& face : brush.faces) {
+        glm::vec3 n = brush.planes[face.planeIndex].normal;
+        for (auto& v : face.polyVerts) {
+            v += n * epsilon;
+        }
+    }
+}
+
 static void emitFace(const FaceGeom& face, const Plane& plane, glm::ivec2 texSize, LevelData& level) {
     if (face.polyVerts.size() < 3) return;
     float texW = (float)(texSize.x > 0 ? texSize.x : 128);
@@ -304,6 +367,22 @@ LevelData MapLoader::load(const string& path, const function<glm::ivec2(const st
 
         for (auto& brush : entity.brushes) {
             generateBrushGeometry(brush);
+        }
+
+        vector<FaceGeom*> allFaces;
+        for (auto& brush : entity.brushes) {
+            for (auto& face : brush.faces) {
+                allFaces.push_back(&face);
+            }
+        }
+        weldBrushVertices(allFaces, 0.01f);
+        fixBrushTJunctions(allFaces, 0.02f);
+
+        for (auto& brush : entity.brushes) {
+            seamPadBrushFaces(brush, 0.001f);
+        }
+
+        for (auto& brush : entity.brushes) {
             for (auto& face : brush.faces) {
                 glm::ivec2 texSize = textureSizeLookup(face.texture);
                 emitFace(face, brush.planes[face.planeIndex], texSize, level);

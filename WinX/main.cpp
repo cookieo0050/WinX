@@ -702,6 +702,7 @@ int main() {
         glCullFace(GL_BACK);
 
         // 3. G-Buffer Geometry Pass
+        glDisable(GL_CULL_FACE);
         glViewport(0, 0, window.width(), window.height());
         glEnable(GL_DEPTH_TEST);
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
