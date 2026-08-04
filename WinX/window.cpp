@@ -86,7 +86,28 @@ void Window::setCursorDisabled(bool disabled) {
     glfwSetInputMode(m_window, GLFW_CURSOR, disabled ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 }
 
+void Window::setFullscreen(bool fullscreen) {
+    if (fullscreen == m_fullscreen) return;
+
+    if (fullscreen) {
+        // Remember the current windowed position/size so windowed mode can be restored.
+        glfwGetWindowPos(m_window, &m_windowedPosX, &m_windowedPosY);
+        glfwGetWindowSize(m_window, &m_windowedWidth, &m_windowedHeight);
+
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        glfwSetWindowMonitor(m_window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+    }
+    else {
+        glfwSetWindowMonitor(m_window, nullptr, m_windowedPosX, m_windowedPosY,
+            m_windowedWidth, m_windowedHeight, 0);
+    }
+
+    m_fullscreen = fullscreen;
+}
+
 void Window::onResize(int width, int height) {
     m_width = width;
     m_height = height;
+    if (onFramebufferResize) onFramebufferResize(width, height);
 }

@@ -36,6 +36,16 @@
 using namespace std;
 
 void GBuffer::init(int width, int height) {
+    // Free any previous allocations so init() can be called again on resize.
+    if (m_fbo != 0) {
+        glDeleteFramebuffers(1, &m_fbo);
+        glDeleteTextures(1, &m_gPosition);
+        glDeleteTextures(1, &m_gNormal);
+        glDeleteTextures(1, &m_gAlbedoSpec);
+        glDeleteRenderbuffers(1, &m_rbo);
+        m_fbo = m_gPosition = m_gNormal = m_gAlbedoSpec = m_rbo = 0;
+    }
+
     m_width = width; m_height = height;
 
     glGenFramebuffers(1, &m_fbo);

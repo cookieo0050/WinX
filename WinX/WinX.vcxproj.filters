@@ -70422,10 +70422,10 @@
       <Filter>Header Files\Shooter</Filter>
     </ClInclude>
     <ClInclude Include="console.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Engine Files</Filter>
     </ClInclude>
     <ClInclude Include="jolt_world.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Engine Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
