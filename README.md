@@ -20,6 +20,8 @@ Go to the folder and click the .slnx file and run there may be errors when start
 
 The engine and what it looks like :D
 
+these are only debug views
+
 SSAO
 <img width="1710" height="932" alt="Screenshot 2026-08-03 202236" src="https://github.com/user-attachments/assets/2c262115-d1c1-468f-a6df-04edf6ea8e4b" />
 
