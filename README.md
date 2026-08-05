@@ -1,5 +1,9 @@
 # WinX
 
+This repo will not be updated as much as the other one here is a link to check out the other repo and what it has.
+This repo has more bug fixes and is in a better shape then this current repo.
+### https://forge.voremicrocomputers.com/Cookieo404/WinX.git
+
 For this Engine to run you will need Visual Studio 2022 C++ desktop development the engine will not run without it. 
 
 Under MIT license, The Text font has its own license please go check that out it will be in Old school fonts.
