@@ -20,7 +20,7 @@ Go to the folder and click the .slnx file and run there may be errors when start
 
 The engine and what it looks like :D
 
-these are only debug views
+# these are only debug views
 
 SSAO
 <img width="1710" height="932" alt="Screenshot 2026-08-03 202236" src="https://github.com/user-attachments/assets/2c262115-d1c1-468f-a6df-04edf6ea8e4b" />
@@ -28,5 +28,12 @@ SSAO
 Position 
 <img width="1891" height="958" alt="Screenshot 2026-08-02 131110" src="https://github.com/user-attachments/assets/1f82a16e-591b-4ca9-91dd-d95034bac592" />
 
-Lighting (lighting is being worked on!)
-<img width="1371" height="931" alt="Screenshot 2026-08-03 202450" src="https://github.com/user-attachments/assets/d05353c0-4a15-4f8b-a41e-8b2f0bf9b040" />
+# Realtime lighting
+the lighting system has been fairly optimized for fast paced game play, the lighting longer has clipping and has smooth lighting as well, lighting will need to improved still but its in a stable place
+
+<img width="1858" height="930" alt="Screenshot 2026-08-05 175859" src="https://github.com/user-attachments/assets/44fa3308-0519-4f9f-8517-492ef7603d0b" />
+
+<img width="1690" height="881" alt="Screenshot 2026-08-05 175807" src="https://github.com/user-attachments/assets/1dc8644d-334b-4b01-8136-de62bf0c61be" />
+
+
+
