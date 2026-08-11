@@ -10,6 +10,9 @@ Under MIT license, The Text font has its own license please go check that out it
 
 This engine May not run on Linux devices.
 
+<img width="1917" height="1020" alt="Screenshot 2026-08-10 195041" src="https://github.com/user-attachments/assets/27b07a6b-ad87-4fbf-8391-013daf7ad24c" />
+
+
 There may be trouble when setting up the engine.
 
 Yeah yeah this has had Ai used to help.
